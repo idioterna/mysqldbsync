@@ -1,7 +1,7 @@
-mysqldbsync
-===========
+mysqldbtools
+============
 
-Tools written at a terrible time
+These tools were written at a time when my adrenaline levels were way way high.
 
 syncdb.py copies missing rows between two databases based on missing primary keys
 
