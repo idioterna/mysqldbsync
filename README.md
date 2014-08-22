@@ -1,5 +1,5 @@
-mysqldbtools
-============
+mysqltools
+==========
 
 These tools were written at a time when my adrenaline levels were way way high.
 
