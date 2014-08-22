@@ -12,7 +12,8 @@ args = sys.argv[1:]
 if len(args) < 3:
 	print '''Usage: %s <host1> <host2> <database> [table1] [table2] ... [--dry-run]
 
-	--dry-run prevents changes from being made to data''' % sys.argv[0]
+	--dry-run prevents changes from being made to data
+	''' % sys.argv[0]
 	sys.exit(1)
 
 password = getpass.getpass('Password: ')
@@ -36,10 +37,15 @@ while '--dry-run' in args:
 	args.remove('--dry-run')
 	dry_run = True
 
+verbose = False
+while '--verbose' in args:
+	args.remove('--verbose')
+	verbose = True
+
 # select table names and figure out their primary keys
 table_names = args[3:]
 if table_names:
-	c1.execute("select table_name, column_name, ordinal_position from information_schema.key_column_usage where constraint_name = 'PRIMARY' and table_schema = %s and table_name in (%s)", [dbname, ','.join(["%s" % x for x in table_names])])
+	c1.execute("select table_name, column_name, ordinal_position from information_schema.key_column_usage where constraint_name = 'PRIMARY' and table_schema = %%s and table_name in (%s)" % ','.join(["'%s'" % x for x in table_names]), [dbname])
 else:
 	c1.execute("select table_name, column_name, ordinal_position from information_schema.key_column_usage where constraint_name = 'PRIMARY' and table_schema = %s", [dbname])
 
@@ -93,6 +99,8 @@ try:
 					c2r.execute("select * from %s where %s" % (table, where), row)
 					fullrow = c2r.fetchone()
 					c1r.execute("insert into %s values (%s)" % (table, ', '.join(['%s' for x in range(len(fullrow))])), fullrow)
+					if verbose:
+						print c1r._last_executed
 				icnt+=1
 				if icnt % 1000 == 0:
 					db1.commit()
@@ -113,6 +121,8 @@ try:
 				c1r.execute("select * from %s where %s" % (table, where), keyleft)
 				fullrow = c1r.fetchone()
 				c2r.execute("insert into %s values (%s)" % (table, ', '.join(['%s' for x in range(len(fullrow))])), fullrow)
+				if verbose:
+					print c1r._last_executed
 			cnt+=1
 			if cnt % 1000 == 0:
 				db2.commit()
